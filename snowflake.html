@@ -68,22 +68,22 @@
       normalize(metrics.dividendYieldIndicatedAnnual, 0, 0.08) // Dividend
     ];
 
-    const data = {
-      labels: [
-        "Value"<br>"Price-to-earnings (PE) ratio",
-        "Future Growth"<br>"EPS growth estimates",
-        "Past Performance"<br>"1 Year price return",
-        "Financial Health"<br>"Debt to equity ratio",
-        "Dividend"<br>"Indicated dividend yield"
-      ],
-      datasets: [{
-        label: `${symbol} Metrics`,
-        data: dataPoints,
-        backgroundColor: 'rgba(255, 105, 180, 0.3)',
-        borderColor: 'pink',
-        borderWidth: 2
-      }]
-    };
+   const data = {
+  labels: [
+    "Value\nprice-to-earnings (PE) ratio",
+    "Future Growth\nEPS growth estimates",
+    "Past Performance\n1 Year price return",
+    "Financial Health\nDebt to equity ratio",
+    "Dividend\nAnnual dividend yield"
+  ],
+  datasets: [{
+    label: `${symbol} Metrics`,
+    data: dataPoints,
+    backgroundColor: 'rgba(255, 105, 180, 0.2)', // pinkish
+    borderColor: 'hotpink',
+    borderWidth: 2
+  }]
+};
 
     if(window.myRadarChart) window.myRadarChart.destroy();
 
