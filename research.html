@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Stock Decision Help</title>
+<title>Stock Buy Decision Helper</title>
 <style>
   body {
     background-color: #1e1e1e;
@@ -76,7 +76,7 @@
       const quoteRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`);
       const quote = await quoteRes.json();
 
-      // Fetch metric data (PE, growth, dividend, debt/equity)
+      // Fetch metric data (PE, growth, dividend, debt/equity, future EPS)
       const metricRes = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`);
       const metricData = await metricRes.json();
 
@@ -87,34 +87,30 @@
 
       const metrics = metricData.metric;
 
-      // Calculate 1 year price return from quote c (current price) and metric['52WeekHigh'] or metric['52WeekLow']
-      // Finnhub metric doesn't have 1yr return directly, so we approximate using 52-week high and low or you could skip
-
-      // We'll use metric['52WeekHigh'] and metric['52WeekLow'] as a rough range, and estimate
-      // But to keep it simple, let's skip and just display current price
-
-      // Format numbers with commas and 2 decimals
+      // Format functions
       const fmtNum = (n) => n ? n.toLocaleString(undefined, {maximumFractionDigits:2}) : "N/A";
       const fmtPct = (n) => n ? (n*100).toFixed(2) + "%" : "N/A";
 
       // Extract needed data
       const price = quote.c;
       const peRatio = metrics.peNormalizedAnnual ?? metrics.peAnnual ?? null;
-      const epsGrowth = metrics.epsGrowth ?? null;
+      const epsGrowth = metrics.epsGrowth ?? null; // Past EPS Growth
+      const epsForward = metrics.epsForward ?? null; // Future EPS estimate (as "expected future growth")
       const dividendYield = metrics.dividendYieldIndicatedAnnual ?? null;
       const debtEquity = metrics.debtToEquityAnnual ?? null;
 
-      // Build verdict based on some simple heuristics
+      // Build verdict based on simple heuristics
       let verdict = "";
       let score = 0;
 
       if (peRatio && peRatio < 20) score++;
       if (epsGrowth && epsGrowth > 0) score++;
+      if (epsForward && epsForward > 0) score++;
       if (dividendYield && dividendYield > 0.02) score++;
       if (debtEquity && debtEquity < 1) score++;
 
-      if (score >= 3) verdict = "Good candidate for buying 👍";
-      else if (score == 2) verdict = "Maybe worth buying, do more research 🤔";
+      if (score >= 4) verdict = "Good candidate for buying 👍";
+      else if (score >= 2) verdict = "Maybe worth buying, do more research 🤔";
       else verdict = "Consider waiting or researching more ⚠️";
 
       // Render output
@@ -122,7 +118,8 @@
       document.getElementById("output").innerHTML = `
         <div class="metric"><strong>Current Price:</strong> $${fmtNum(price)}</div>
         <div class="metric"><strong>PE Ratio:</strong> ${fmtNum(peRatio)}</div>
-        <div class="metric"><strong>EPS Growth Estimate:</strong> ${fmtPct(epsGrowth)}</div>
+        <div class="metric"><strong>EPS Growth (Past):</strong> ${fmtPct(epsGrowth)}</div>
+        <div class="metric"><strong>EPS Growth Estimate (Future):</strong> ${fmtNum(epsForward)}</div>
         <div class="metric"><strong>Dividend Yield:</strong> ${fmtPct(dividendYield)}</div>
         <div class="metric"><strong>Debt to Equity Ratio:</strong> ${fmtNum(debtEquity)}</div>
         <div class="verdict">${verdict}</div>
@@ -135,6 +132,10 @@
     }
   });
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
