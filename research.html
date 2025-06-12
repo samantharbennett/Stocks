@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Stock Buy Decision Widget</title>
+  <title>Stock Buy Decision Helper</title>
   <style>
     body {
       background-color: #1e1e1e;
@@ -43,12 +43,13 @@
       background: #2c2c2c;
       border-radius: 6px;
       min-height: 100px;
+      white-space: pre-line;
     }
   </style>
 </head>
 <body>
 
-<h2>Stock Information</h2>
+<h2>Stock Buy Decision Helper</h2>
 <input type="text" id="symbolInput" placeholder="Enter stock symbol (e.g. LMT)" />
 <button id="fetchButton">Get Stock Data</button>
 
@@ -58,157 +59,151 @@
   const apiKey = "d151vgpr01qntv1fni6gd151vgpr01qntv1fni70";
   const output = document.getElementById("output");
 
-  // Convert date to UNIX timestamp (seconds)
   function toUnix(date) {
     return Math.floor(date.getTime() / 1000);
   }
 
-  // Fetch stock metrics (fundamentals)
   async function fetchMetrics(symbol) {
     try {
       const res = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`);
       const data = await res.json();
       if (data.metric) return data.metric;
-      else throw new Error("No metric data");
-    } catch (e) {
-      console.error("fetchMetrics error:", e);
+      else return null;
+    } catch {
       return null;
     }
   }
 
-  // Fetch candles (historical price data)
   async function fetchCandles(symbol, from, to) {
     try {
       const res = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${apiKey}`);
       const data = await res.json();
-      return data;
-    } catch (e) {
-      console.error("fetchCandles error:", e);
+      if (data.s === "ok" && data.c && data.c.length > 0) return data;
+      return null;
+    } catch {
       return null;
     }
   }
 
-  // Calculate percent change between two prices
   function percentChange(oldPrice, newPrice) {
+    if (oldPrice === 0 || oldPrice === null || oldPrice === undefined || newPrice === null || newPrice === undefined) return null;
     return ((newPrice - oldPrice) / oldPrice) * 100;
   }
 
-  // Determine if stock is up or down over period
   function upDown(percent) {
+    if (percent === null) return "N/A";
     return percent >= 0 ? "Up" : "Down";
   }
 
-  // Main update function
+  function formatPercent(value) {
+    if (value === null) return "N/A";
+    return value.toFixed(2) + "%";
+  }
+
+  function formatNumber(value, decimals=2) {
+    if (value === null || value === undefined || isNaN(value)) return "N/A";
+    return value.toFixed(decimals);
+  }
+
+  // Find closing price on or after given date
+  function getClosePriceOnOrAfter(candles, date) {
+    if (!candles) return null;
+    const target = toUnix(date);
+    for (let i = 0; i < candles.t.length; i++) {
+      if (candles.t[i] >= target) return candles.c[i];
+    }
+    // If none found, return first price if available
+    return candles.c.length > 0 ? candles.c[0] : null;
+  }
+
   async function update() {
     const symbol = document.getElementById("symbolInput").value.trim().toUpperCase();
     if (!symbol) {
-      output.innerHTML = "Please enter a stock symbol.";
+      output.textContent = "Please enter a stock symbol.";
       return;
     }
 
-    output.innerHTML = "Loading data for " + symbol + "...";
+    output.textContent = `Loading data for ${symbol}...`;
 
     const now = new Date();
     const todayUnix = toUnix(now);
 
-    // 1 year ago (set to 370 days back to cover weekends/holidays)
+    // Dates for historical data
     const oneYearAgo = new Date(now);
     oneYearAgo.setDate(now.getDate() - 370);
 
-    // 6 months ago (190 days)
     const sixMonthsAgo = new Date(now);
     sixMonthsAgo.setDate(now.getDate() - 190);
 
-    // 1 month ago (30 days)
     const oneMonthAgo = new Date(now);
     oneMonthAgo.setDate(now.getDate() - 30);
 
-    // 2 weeks ago (14 days)
     const twoWeeksAgo = new Date(now);
     twoWeeksAgo.setDate(now.getDate() - 14);
 
-    // 1 week ago (7 days)
     const oneWeekAgo = new Date(now);
     oneWeekAgo.setDate(now.getDate() - 7);
 
     // Fetch fundamentals
     const metrics = await fetchMetrics(symbol);
-    if (!metrics) {
-      output.innerHTML = "Could not fetch fundamental metrics for " + symbol;
-      return;
-    }
 
-    // Fetch 1 year candles (fallback to 6 months if empty)
+    // Fetch 1 year candles
     let candles = await fetchCandles(symbol, toUnix(oneYearAgo), todayUnix);
-    console.log("1 year candles:", candles);
-    if (!candles || candles.s !== "ok" || !candles.c || candles.c.length === 0) {
-      console.warn("No 1 year data, trying 6 months");
+
+    if (!candles) {
+      // fallback to 6 months
       candles = await fetchCandles(symbol, toUnix(sixMonthsAgo), todayUnix);
-      if (!candles || candles.s !== "ok" || !candles.c || candles.c.length === 0) {
-        output.innerHTML = "No historical candle data available for " + symbol;
-        return;
-      }
     }
 
-    // Helper to get closing price closest to a given date (or first available)
-    function getClosePriceOnOrAfter(date) {
-      const target = toUnix(date);
-      for(let i = 0; i < candles.t.length; i++) {
-        if(candles.t[i] >= target) return candles.c[i];
-      }
-      return candles.c[0]; // fallback first candle price
-    }
+    // Extract prices or set null if no data
+    const priceToday = candles && candles.c.length ? candles.c[candles.c.length - 1] : null;
+    const price1YearAgo = getClosePriceOnOrAfter(candles, oneYearAgo);
+    const price6MonthsAgo = getClosePriceOnOrAfter(candles, sixMonthsAgo);
+    const price1MonthAgo = getClosePriceOnOrAfter(candles, oneMonthAgo);
+    const price2WeeksAgo = getClosePriceOnOrAfter(candles, twoWeeksAgo);
+    const price1WeekAgo = getClosePriceOnOrAfter(candles, oneWeekAgo);
 
-    // Get prices at required dates
-    const priceToday = candles.c[candles.c.length -1];
-    const price1YearAgo = getClosePriceOnOrAfter(oneYearAgo);
-    const price6MonthsAgo = getClosePriceOnOrAfter(sixMonthsAgo);
-    const price1MonthAgo = getClosePriceOnOrAfter(oneMonthAgo);
-    const price2WeeksAgo = getClosePriceOnOrAfter(twoWeeksAgo);
-    const price1WeekAgo = getClosePriceOnOrAfter(oneWeekAgo);
-
-    // Calculate % changes
-    const change1Day = candles.c.length > 1 ? percentChange(candles.c[candles.c.length - 2], priceToday) : 0;
+    // Calculate % changes or null if not possible
+    const change1Day = (candles && candles.c.length > 1) ? percentChange(candles.c[candles.c.length - 2], priceToday) : null;
     const change1Month = percentChange(price1MonthAgo, priceToday);
     const change6Months = percentChange(price6MonthsAgo, priceToday);
     const change1Year = percentChange(price1YearAgo, priceToday);
 
-    // Up/Down checks for week, 2 weeks, month
     const weeklyChange = percentChange(price1WeekAgo, priceToday);
     const twoWeekChange = percentChange(price2WeeksAgo, priceToday);
     const monthlyChange = change1Month;
 
-    // Decision logic example:
-    // Buy if:
-    // - P/E ratio reasonable (< 30)
-    // - Debt to equity < 1
-    // - Stock trending up at least in last month
-    // - Positive EPS growth
-    // - Dividend yield > 0 (indicating return to shareholder)
-    // - Price momentum mostly positive for week/2 week/month
+    // Fundamental metrics or null if missing
+    const pe = metrics && metrics.peNormalizedAnnual ? metrics.peNormalizedAnnual : (metrics && metrics.peAnnual ? metrics.peAnnual : null);
+    const debtEquity = metrics && metrics.debtToEquityAnnual ? metrics.debtToEquityAnnual : null;
+    const epsGrowth = metrics && metrics.epsGrowth ? metrics.epsGrowth : null;
+    const dividendYield = metrics && metrics.dividendYieldAnnual ? metrics.dividendYieldAnnual : null;
 
-    const pe = metrics.peNormalizedAnnual || metrics.peAnnual || 0;
-    const debtEquity = metrics.debtToEquityAnnual || 0;
-    const epsGrowth = metrics.epsGrowth || 0; // might be undefined
-    const dividendYield = metrics.dividendYieldAnnual || 0;
-
+    // Buy decision logic with N/A fallback
     let buyScore = 0;
-    if(pe > 0 && pe < 30) buyScore++;
-    if(debtEquity > 0 && debtEquity < 1) buyScore++;
-    if(epsGrowth > 0) buyScore++;
-    if(dividendYield > 0) buyScore++;
-    if(monthlyChange > 0) buyScore++;
-    if(weeklyChange > 0) buyScore++;
-    if(twoWeekChange > 0) buyScore++;
+    let enoughDataForDecision = true;
 
-    const buyRecommendation = buyScore >= 5 ? "BUY" : "HOLD/SELL";
+    if (pe === null || debtEquity === null || epsGrowth === null || dividendYield === null ||
+        monthlyChange === null || weeklyChange === null || twoWeekChange === null) {
+      enoughDataForDecision = false;
+    } else {
+      if (pe > 0 && pe < 30) buyScore++;
+      if (debtEquity > 0 && debtEquity < 1) buyScore++;
+      if (epsGrowth > 0) buyScore++;
+      if (dividendYield > 0) buyScore++;
+      if (monthlyChange > 0) buyScore++;
+      if (weeklyChange > 0) buyScore++;
+      if (twoWeekChange > 0) buyScore++;
+    }
+
+    const buyRecommendation = enoughDataForDecision && buyScore >= 5 ? "BUY" : (enoughDataForDecision ? "HOLD/SELL" : "N/A");
 
     output.innerHTML = `
       <div class="metric"><b>Price Changes</b>
-        <small>1 Day: ${change1Day.toFixed(2)}% (${upDown(change1Day)})</small><br/>
-        <small>1 Month: ${change1Month.toFixed(2)}% (${upDown(change1Month)})</small><br/>
-        <small>6 Months: ${change6Months.toFixed(2)}% (${upDown(change6Months)})</small><br/>
-        <small>1 Year: ${change1Year.toFixed(2)}% (${upDown(change1Year)})</small>
+        <small>1 Day: ${formatPercent(change1Day)} (${upDown(change1Day)})</small><br/>
+        <small>1 Month: ${formatPercent(change1Month)} (${upDown(change1Month)})</small><br/>
+        <small>6 Months: ${formatPercent(change6Months)} (${upDown(change6Months)})</small><br/>
+        <small>1 Year: ${formatPercent(change1Year)} (${upDown(change1Year)})</small>
       </div>
 
       <div class="metric"><b>Momentum</b>
@@ -218,10 +213,10 @@
       </div>
 
       <div class="metric"><b>Fundamentals</b>
-        <small>P/E Ratio: ${pe.toFixed(2)}</small><br/>
-        <small>Debt to Equity: ${debtEquity.toFixed(2)}</small><br/>
-        <small>EPS Growth: ${epsGrowth.toFixed(2)}</small><br/>
-        <small>Dividend Yield: ${dividendYield.toFixed(2)}</small>
+        <small>P/E Ratio: ${formatNumber(pe)}</small><br/>
+        <small>Debt to Equity: ${formatNumber(debtEquity)}</small><br/>
+        <small>EPS Growth: ${formatNumber(epsGrowth)}</small><br/>
+        <small>Dividend Yield: ${formatNumber(dividendYield)}</small>
       </div>
 
       <div class="metric"><b>Recommendation:</b> ${buyRecommendation}</div>
@@ -233,3 +228,4 @@
 
 </body>
 </html>
+
