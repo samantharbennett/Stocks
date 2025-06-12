@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Finnhub Stock News Widget</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1e1e1e;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #ffffff;
+    }
+
+    #news-widget {
+      width: 350px;
+      margin: 0 auto;
+      background-color: #2c2c2c;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    #news-widget h3 {
+      font-size: 1.1em;
+      margin-top: 0;
+      color: #00bcd4;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+
+    .news-item {
+      margin-bottom: 12px;
+    }
+
+    .news-item a {
+      color: #90caf9;
+      text-decoration: none;
+      font-size: 0.95em;
+      display: block;
+    }
+
+    .news-item a:hover {
+      text-decoration: underline;
+    }
+
+    .news-date {
+      font-size: 0.75em;
+      color: #aaa;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="news-widget">
+    <h3>Latest News: ATOS</h3>
+    <div id="news-articles">Loading news...</div>
+  </div>
+
+  <script>
+    const symbol = "ATOS"; // Replace this with a real ticker like "AAPL"
+    const apiKey = "d151vgpr01qntv1fni6gd151vgpr01qntv1fni70"; // Replace with your real API key
+
+    const fromDate = new Date();
+    fromDate.setDate(fromDate.getDate() - 30); // Get news from past 30 days
+    const from = fromDate.toISOString().split('T')[0];
+    const to = new Date().toISOString().split('T')[0];
+
+    async function fetchNews() {
+      try {
+        const url = `https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=${from}&to=${to}&token=${apiKey}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const container = document.getElementById("news-articles");
+        container.innerHTML = "";
+
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = "<p>No news found.</p>";
+          return;
+        }
+
+        data.slice(0, 5).forEach(article => {
+          const div = document.createElement("div");
+          div.className = "news-item";
+          div.innerHTML = `
+            <a href="${article.url}" target="_blank">${article.headline}</a>
+            <div class="news-date">${new Date(article.datetime * 1000).toLocaleDateString()}</div>
+          `;
+          container.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Error fetching news:", error);
+        document.getElementById("news-articles").innerHTML = "<p>Error loading news.</p>";
+      }
+    }
+
+    fetchNews();
+  </script>
+
+</body>
+</html>
