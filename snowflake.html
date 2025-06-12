@@ -25,6 +25,10 @@
       color: white;
       cursor: pointer;
     }
+    canvas {
+      width: 340px !important;
+      height: 340px !important;
+    }
   </style>
 </head>
 <body>
@@ -32,7 +36,7 @@
 <h2>Stock Snowflake Model</h2>
 <input type="text" id="symbolInput" value="LMT" placeholder="Enter Stock Symbol (e.g. AAPL)">
 <button id="updateButton">Update</button>
-<canvas id="snowflakeChart" width="400" height="400"></canvas>
+<canvas id="snowflakeChart"></canvas>
 
 <script>
   const apiKey = "d151vgpr01qntv1fni6gd151vgpr01qntv1fni70";
@@ -68,8 +72,8 @@
       datasets: [{
         label: `${symbol} Metrics`,
         data: dataPoints,
-        backgroundColor: 'rgba(0, 188, 212, 0.2)',
-        borderColor: '#00bcd4',
+        backgroundColor: 'rgba(255, 105, 180, 0.2)', // Pink shade
+        borderColor: '#ff69b4', // Pink border
         borderWidth: 2
       }]
     };
@@ -104,3 +108,4 @@
 
 </body>
 </html>
+
