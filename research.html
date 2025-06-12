@@ -1,183 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Stock Research Decision Tool</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 450px;
-      margin: 20px auto;
-      background: #121212;
-      color: white;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 1rem;
-      border-radius: 4px;
-      border: none;
-      margin-right: 5px;
-    }
-    input {
-      width: 70%;
-      background: #222;
-      color: white;
-    }
-    button {
-      background: #e91e63;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    #output {
-      margin-top: 20px;
-      white-space: pre-wrap;
-      line-height: 1.4;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stock Buy Decision Helper</title>
+<style>
+  body {
+    background-color: #1e1e1e;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    max-width: 350px;
+    margin: 20px auto;
+    padding: 10px;
+  }
+  input, button {
+    padding: 10px;
+    margin: 5px 0;
+    width: 100%;
+    border-radius: 5px;
+    border: none;
+    font-size: 16px;
+  }
+  button {
+    background-color: #e91e63;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #ad1457;
+  }
+  .result {
+    margin-top: 20px;
+    background-color: #2c2c2c;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  .metric {
+    margin-bottom: 10px;
+  }
+  .metric strong {
+    display: block;
+    font-size: 14px;
+    color: #e91e63;
+  }
+  .verdict {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+</style>
 </head>
 <body>
 
-<h2>Stock Research Decision Tool</h2>
-<input type="text" id="symbol" placeholder="Enter Stock Symbol (e.g. AAPL)" value="AAPL" />
-<button id="checkBtn">Check Stock</button>
+<h2>Stock Buy Decision Helper</h2>
 
-<pre id="output">Enter a symbol and click "Check Stock"</pre>
+<input id="stockSymbol" type="text" placeholder="Enter Stock Symbol (e.g. AAPL)" />
+<button id="fetchBtn">Check Stock</button>
+
+<div id="output" class="result" style="display:none;"></div>
 
 <script>
   const apiKey = "d151vgpr01qntv1fni6gd151vgpr01qntv1fni70";
 
-  // Helper to format change percentages or fallback
-  function formatChange(val) {
-    return val === null || val === undefined || isNaN(val) ? "N/A" : val.toFixed(2) + "%";
-  }
+  document.getElementById("fetchBtn").addEventListener("click", async () => {
+    const symbol = document.getElementById("stockSymbol").value.trim().toUpperCase();
+    if (!symbol) {
+      alert("Please enter a stock symbol.");
+      return;
+    }
+    document.getElementById("output").style.display = "none";
+    document.getElementById("output").innerHTML = "Loading...";
 
-  function upDown(change) {
-    if (change === null || isNaN(change)) return "N/A";
-    return change >= 0 ? "Up" : "Down";
-  }
-
-  // Calculate percentage change between two prices
-  function calcChange(newPrice, oldPrice) {
-    if (!newPrice || !oldPrice || oldPrice === 0) return null;
-    return ((newPrice - oldPrice) / oldPrice) * 100;
-  }
-
-  async function fetchWeeklyCandles(symbol, weeks) {
-    const to = Math.floor(Date.now() / 1000);
-    const from = to - weeks * 7 * 24 * 60 * 60; // weeks ago in seconds
-
-    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=W&from=${from}&to=${to}&token=${apiKey}`;
     try {
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.s !== 'ok') {
-        return null;
+      // Fetch quote data (price)
+      const quoteRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`);
+      const quote = await quoteRes.json();
+
+      // Fetch metric data (PE, growth, dividend, debt/equity)
+      const metricRes = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`);
+      const metricData = await metricRes.json();
+
+      if (quote.c === 0 || !metricData.metric) {
+        document.getElementById("output").innerHTML = "No data found for this symbol.";
+        return;
       }
-      return data;
-    } catch {
-      return null;
+
+      const metrics = metricData.metric;
+
+      // Calculate 1 year price return from quote c (current price) and metric['52WeekHigh'] or metric['52WeekLow']
+      // Finnhub metric doesn't have 1yr return directly, so we approximate using 52-week high and low or you could skip
+
+      // We'll use metric['52WeekHigh'] and metric['52WeekLow'] as a rough range, and estimate
+      // But to keep it simple, let's skip and just display current price
+
+      // Format numbers with commas and 2 decimals
+      const fmtNum = (n) => n ? n.toLocaleString(undefined, {maximumFractionDigits:2}) : "N/A";
+      const fmtPct = (n) => n ? (n*100).toFixed(2) + "%" : "N/A";
+
+      // Extract needed data
+      const price = quote.c;
+      const peRatio = metrics.peNormalizedAnnual ?? metrics.peAnnual ?? null;
+      const epsGrowth = metrics.epsGrowth ?? null;
+      const dividendYield = metrics.dividendYieldIndicatedAnnual ?? null;
+      const debtEquity = metrics.debtToEquityAnnual ?? null;
+
+      // Build verdict based on some simple heuristics
+      let verdict = "";
+      let score = 0;
+
+      if (peRatio && peRatio < 20) score++;
+      if (epsGrowth && epsGrowth > 0) score++;
+      if (dividendYield && dividendYield > 0.02) score++;
+      if (debtEquity && debtEquity < 1) score++;
+
+      if (score >= 3) verdict = "Good candidate for buying 👍";
+      else if (score == 2) verdict = "Maybe worth buying, do more research 🤔";
+      else verdict = "Consider waiting or researching more ⚠️";
+
+      // Render output
+      document.getElementById("output").style.display = "block";
+      document.getElementById("output").innerHTML = `
+        <div class="metric"><strong>Current Price:</strong> $${fmtNum(price)}</div>
+        <div class="metric"><strong>PE Ratio:</strong> ${fmtNum(peRatio)}</div>
+        <div class="metric"><strong>EPS Growth Estimate:</strong> ${fmtPct(epsGrowth)}</div>
+        <div class="metric"><strong>Dividend Yield:</strong> ${fmtPct(dividendYield)}</div>
+        <div class="metric"><strong>Debt to Equity Ratio:</strong> ${fmtNum(debtEquity)}</div>
+        <div class="verdict">${verdict}</div>
+      `;
+
+    } catch (error) {
+      document.getElementById("output").style.display = "block";
+      document.getElementById("output").innerHTML = "Error fetching stock data.";
+      console.error(error);
     }
-  }
-
-  async function fetchMetrics(symbol) {
-    try {
-      const res = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`);
-      const data = await res.json();
-      return data.metric || null;
-    } catch {
-      return null;
-    }
-  }
-
-  document.getElementById('checkBtn').addEventListener('click', async () => {
-    const symbol = document.getElementById('symbol').value.trim().toUpperCase();
-    const output = document.getElementById('output');
-    output.textContent = "Loading data for " + symbol + "...";
-
-    const [metrics, candles] = await Promise.all([
-      fetchMetrics(symbol),
-      fetchWeeklyCandles(symbol, 52) // 1 year weekly candles
-    ]);
-
-    // Initialize changes as null
-    let oneDayChange = null; // N/A with weekly data
-    let oneMonthChange = null;
-    let sixMonthChange = null;
-    let oneYearChange = null;
-    let weekChange = null;
-    let twoWeekChange = null;
-    let monthChange = null;
-
-    if (candles && candles.c && candles.c.length > 1) {
-      const close = candles.c;
-      const len = close.length;
-
-      // Calculate momentum changes
-      weekChange = len > 1 ? calcChange(close[len-1], close[len-2]) : null;
-      twoWeekChange = len > 2 ? calcChange(close[len-1], close[len-3]) : null;
-      oneMonthChange = len > 4 ? calcChange(close[len-1], close[len-5]) : null;
-      sixMonthChange = len > 25 ? calcChange(close[len-1], close[len-26]) : null;
-      oneYearChange = len > 51 ? calcChange(close[len-1], close[len-52]) : null;
-      monthChange = oneMonthChange; // alias
-    }
-
-    // Fundamentals with fallback
-    const peRatio = metrics && metrics.peNormalizedAnnual ? metrics.peNormalizedAnnual : null;
-    const debtEquity = metrics && metrics.debtEquityAnnual ? metrics.debtEquityAnnual : null;
-    const epsGrowth = metrics && metrics.epsGrowth ? metrics.epsGrowth : null;
-    const dividendYield = metrics && metrics.dividendYieldAnnual ? metrics.dividendYieldAnnual : null;
-
-    // Decision logic: simple heuristic
-    let recommendation = "N/A";
-    if (
-      peRatio !== null && peRatio < 20 &&
-      epsGrowth !== null && epsGrowth > 0 &&
-      oneYearChange !== null && oneYearChange > 0 &&
-      debtEquity !== null && debtEquity < 1 &&
-      dividendYield !== null && dividendYield > 0.02 &&
-      weekChange !== null && weekChange > 0 &&
-      monthChange !== null && monthChange > 0
-    ) {
-      recommendation = "Consider Buying";
-    } else if (
-      peRatio !== null && peRatio > 30 &&
-      oneYearChange !== null && oneYearChange < 0 &&
-      debtEquity !== null && debtEquity > 2
-    ) {
-      recommendation = "Consider Selling or Avoid";
-    }
-
-    output.textContent =
-`Price Changes
-
-1 Day: N/A (weekly data)
-
-1 Month: ${formatChange(oneMonthChange)} (${upDown(oneMonthChange)})
-6 Months: ${formatChange(sixMonthChange)} (${upDown(sixMonthChange)})
-1 Year: ${formatChange(oneYearChange)} (${upDown(oneYearChange)})
-
-Momentum
-
-This Week: ${formatChange(weekChange)} (${upDown(weekChange)})
-Last 2 Weeks: ${formatChange(twoWeekChange)} (${upDown(twoWeekChange)})
-This Month: ${formatChange(monthChange)} (${upDown(monthChange)})
-
-Fundamentals
-
-P/E Ratio: ${peRatio !== null ? peRatio.toFixed(2) : "N/A"}
-Debt to Equity: ${debtEquity !== null ? debtEquity.toFixed(2) : "N/A"}
-EPS Growth: ${epsGrowth !== null ? (epsGrowth*100).toFixed(2) + "%" : "N/A"}
-Dividend Yield: ${dividendYield !== null ? (dividendYield*100).toFixed(2) + "%" : "N/A"}
-
-Recommendation:
-${recommendation}
-`;
   });
 </script>
 
 </body>
 </html>
-
