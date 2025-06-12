@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Biotech Stocks Widget - Dark Mode Mobile</title>
+</head>
+<body>
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+  {
+    "colorTheme": "dark",
+    "dateRange": "12M",
+    "showChart": true,
+    "locale": "en",
+    "largeChartUrl": "",
+    "isTransparent": false,
+    "showSymbolLogo": true,
+    "width": "350",
+    "height": "600",
+    "tabs": [
+      {
+        "title": "Biotech Stocks",
+        "symbols": [
+          { "s": "NYSE:PFE", "d": "PFE - Pfizer Inc" },
+          { "s": "NYSE:LLY", "d": "LLY - Eli & Lilly" },
+          { "s": "NASDAQ:MRNA", "d": "MRNA - Moderna Inc" },
+          { "s": "NASDAQ:LFMD", "d": "LFMD - LifeMd" },
+          { "s": "NASDAQ:CRSP", "d": "CRSP - CRISPR" },
+          { "s": "NYSE:TMO", "d": "TMO - Thermo Fisher Scientific" },
+          { "s": "NASDAQ:REGN", "d": "REGN - Regeneron Pharmaceuticals" }
+        ]
+      }
+    ]
+  }
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+</body>
+</html>
