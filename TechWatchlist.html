@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Analyzer Widget</title>
+</head>
+<body>
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+  {
+    "colorTheme": "light",
+    "dateRange": "12M",
+    "showChart": true,
+    "locale": "en",
+    "largeChartUrl": "",
+    "isTransparent": false,
+    "showSymbolLogo": true,
+    "width": "100%",
+    "height": "600",
+    "tabs": [
+      {
+        "title": "Tech Stocks",
+        "symbols": [
+          { "s": "NASDAQ:GOOG", "d": "GOOG - Google" },
+          { "s": "NASDAQ:MSFT", "d": "MSFT - Microsoft" },
+          { "s": "NASDAQ:AAPL", "d": "AAPL - Apple" },
+          { "s": "NASDAQ:NVDA", "d": "NVDA - Nvidia" },
+          { "s": "NASDAQ:META", "d": "META - Meta Platforms" },
+          { "s": "NASDAQ:AMZN", "d": "AMZN - Amazon" },
+          { "s": "NYSE:CRM", "d": "CRM - Salesforce Inc" },
+          { "s": "NASDAQ:CSCO", "d": "CSCO - Cisco Systems" },
+          { "s": "NYSE:PLTR", "d": "PLTR - Palantir Technologies" },
+          { "s": "NASDAQ:INTC", "d": "INTC - Intel Corp" },
+          { "s": "NASDAQ:ADBE", "d": "ADBE - Adobe Inc" }
+        ]
+      },
+      {
+        "title": "Tech ETFs",
+        "symbols": [
+          { "s": "NYSEARCA:BAI", "d": "BAI - Blackrock AI ETF" },
+          { "s": "NASDAQ:SMH", "d": "SMH - VanEck Semiconductor ETF" },
+          { "s": "NYSEARCA:VGT", "d": "VGT - Vanguard Information Tech ETF" },
+          { "s": "NYSEARCA:CHAT", "d": "CHAT - Roundhill Generative AI & Technology ETF" },
+          { "s": "NYSEARCA:ARTY", "d": "ARTY - iShares Future AI & Tech ETF" },
+          { "s": "NASDAQ:AIQ", "d": "AIQ - Global X AI & Tech ETF" }
+        ]
+      }
+    ]
+  }
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+</body>
+</html>
