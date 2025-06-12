@@ -85,7 +85,6 @@
         "colorTheme": "dark",
         "locale": "en",
         "isTransparent": false,
-        "container_id": "symbol-profile"
       });
     </script>
   </div>
@@ -95,8 +94,9 @@
 <div class="widget-container">
   <div class="tradingview-widget-container">
     <div class="tradingview-widget-container__widget"></div>
-    <script type="text/javascript"  src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-profile.js" async>
+    <script type="text/javascript"  src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
       new TradingView.widget({
+        "interval": "1m",
         "width": 350,
         "height": 450,
         "symbol": fullSymbol,
