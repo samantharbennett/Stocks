@@ -1,119 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Full Market Overview Widget - Dark Mode Mobile</title>
+</head>
+<body>
+
 <!-- TradingView Widget BEGIN -->
-<div class="tradingview-widget-container" style="max-width: 100%; width: 340px;">
+<div class="tradingview-widget-container">
   <div class="tradingview-widget-container__widget"></div>
-  <div class="tradingview-widget-copyright">
-    <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-      <span class="blue-text">Track all markets on TradingView</span>
-    </a>
-  </div>
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
   {
-    "width": 340,
-    "height": 550,
-    "symbolsGroups": [
+    "colorTheme": "dark",
+    "dateRange": "12M",
+    "showChart": true,
+    "locale": "en",
+    "largeChartUrl": "",
+    "isTransparent": false,
+    "showSymbolLogo": true,
+    "width": "350",
+    "height": "600",
+    "tabs": [
       {
-        "name": "Total Market ETFs",
+        "title": "Total Market ETFs",
         "symbols": [
-          { "name": "AMEX:VOO", "displayName": "VOO - Vanguard S&P 500 ETF" },
-          { "name": "AMEX:VTI", "displayName": "VTI - Vanguard Total Stock Market ETF" },
-          { "name": "NASDAQ:VXUS", "displayName": "VXUS - Vanguard Total International Stock Market ETF" },
-          { "name": "AMEX:SPLG", "displayName": "SPLG - SPDR Portfolio S&P 500" },
-          { "name": "NASDAQ:QQQ", "displayName": "QQQ - Invesco QQQ Trust" },
-          { "name": "AMEX:SCHG", "displayName": "SCHG - Schwab US Large Cap Growth ETF" },
-          { "name": "AMEX:SCHX", "displayName": "SCHX - Schwab US Large Cap ETF" },
-          { "name": "AMEX:VT", "displayName": "VT - Vanguard Total World Stock ETF" },
-          { "name": "CBOE:QUAL", "displayName": "QUAL - iShares US Quality Factor ETF" },
-          { "name": "BIVA:SPYG", "displayName": "SPYG - SPDR Portfolio S&P 500 Growth ETF" }
+          {"s": "AMEX:VOO", "d": "VOO - Vanguard S&P 500 ETF"},
+          {"s": "AMEX:VTI", "d": "VTI - Vanguard Total Stock Market ETF"},
+          {"s": "NASDAQ:VXUS", "d": "VXUS - Vanguard Total International Stock Market ETF"},
+          {"s": "AMEX:SPLG", "d": "SPLG - SPDR Portfolio S&P 500"},
+          {"s": "NASDAQ:QQQ", "d": "QQQ - Invesco QQQ Trust"},
+          {"s": "AMEX:SCHG", "d": "SCHG - Schwab US Large Cap Growth ETF"},
+          {"s": "AMEX:SCHX", "d": "SCHX - Schwab US Large Cap ETF"},
+          {"s": "AMEX:VT", "d": "VT - Vanguard Total World Stock ETF"},
+          {"s": "CBOE:QUAL", "d": "QUAL - iShares US Quality Factor ETF"},
+          {"s": "BIVA:SPYG", "d": "SPYG - SPDR Portfolio S&P 500 Growth ETF"}
         ]
       },
       {
-        "name": "Tech Stocks",
+        "title": "Tech Stocks",
         "symbols": [
-          { "name": "NASDAQ:GOOG", "displayName": "GOOG - Google" },
-          { "name": "NASDAQ:MSFT", "displayName": "MSFT - Microsoft" },
-          { "name": "NASDAQ:AAPL", "displayName": "AAPL - Apple Inc." },
-          { "name": "NASDAQ:NVDA", "displayName": "NVDA - Nvidia" },
-          { "name": "NASDAQ:META", "displayName": "META - Meta Platforms" },
-          { "name": "NASDAQ:AMZN", "displayName": "AMZN - Amazon" },
-          { "name": "NYSE:CRM", "displayName": "CRM - Salesforce Inc" },
-          { "name": "NASDAQ:CSCO", "displayName": "CSCO - Cisco Systems" },
-          { "name": "NASDAQ:PLTR", "displayName": "PLTR - Palantir Technologies Inc" },
-          { "name": "NASDAQ:INTC", "displayName": "INTC - Intel Corp" },
-          { "name": "NASDAQ:ADBE", "displayName": "ADBE - Adobe Inc" }
+          {"s": "NASDAQ:GOOG", "d": "GOOG - Google"},
+          {"s": "NASDAQ:MSFT", "d": "MSFT - Microsoft"},
+          {"s": "NASDAQ:AAPL", "d": "AAPL - Apple Inc."},
+          {"s": "NASDAQ:NVDA", "d": "NVDA - Nvidia"},
+          {"s": "NASDAQ:META", "d": "META - Meta Platforms"},
+          {"s": "NASDAQ:AMZN", "d": "AMZN - Amazon"},
+          {"s": "NYSE:CRM", "d": "CRM - Salesforce Inc"},
+          {"s": "NASDAQ:CSCO", "d": "CSCO - Cisco Systems"},
+          {"s": "NASDAQ:PLTR", "d": "PLTR - Plantair Technologies Inc"},
+          {"s": "NASDAQ:INTC", "d": "INTC - Intell Corp"},
+          {"s": "NASDAQ:ADBE", "d": "ADBE - Adobe Inc"}
         ]
       },
       {
-        "name": "Defense Stocks",
+        "title": "Defense Stocks",
         "symbols": [
-          { "name": "NYSE:LMT", "displayName": "LMT - Lockheed Martin" },
-          { "name": "NYSE:HEI", "displayName": "HEI - Heico" },
-          { "name": "NYSE:LHX", "displayName": "LHX - L3Harris Technologies Inc" },
-          { "name": "VIE:RTX", "displayName": "RTX - Raytheon" },
-          { "name": "NYSE:NOC", "displayName": "NOC - Northrop Grumman Corp" },
-          { "name": "NASDAQ:KTOS", "displayName": "KTOS - Kratos Defense & Security Solutions" }
+          {"s": "NYSE:LMT", "d": "LMT - Lockheed Martin"},
+          {"s": "NYSE:HEI", "d": "HEI - Heico"},
+          {"s": "NYSE:LHX", "d": "LHX - L3Harris Technologies Inc"},
+          {"s": "VIE:RTX", "d": "RTX - Raytheon"},
+          {"s": "NYSE:NOC", "d": "NOC - Northrop Grumman Corp"},
+          {"s": "NASDAQ:KTOS", "d": "KTOS - Kratos Defense & Security Solutions"}
         ]
       },
       {
-        "name": "Biotech Stocks",
+        "title": "Biotech Stocks",
         "symbols": [
-          { "name": "NYSE:PFE", "displayName": "PFE - Pfizer Inc" },
-          { "name": "NYSE:LLY", "displayName": "LLY - Eli Lilly" },
-          { "name": "NASDAQ:MRNA", "displayName": "MRNA - Moderna Inc" },
-          { "name": "NASDAQ:LFMD", "displayName": "LFMD - LifeMd" },
-          { "name": "NASDAQ:CRSP", "displayName": "CRSP - CRISPR" },
-          { "name": "NYSE:TMO", "displayName": "TMO - Thermo Fisher Scientific" },
-          { "name": "NASDAQ:REGN", "displayName": "REGN - Regeneron Pharmaceuticals" }
+          {"s": "NYSE:PFE", "d": "PFE - Pfizer Inc"},
+          {"s": "NYSE:LLY", "d": "LLY - Eli & Lily"},
+          {"s": "NASDAQ:MRNA", "d": "MRNA - Moderna Inc"},
+          {"s": "NASDAQ:LFMD", "d": "LFMD - LifeMd"},
+          {"s": "NASDAQ:CRSP", "d": "CRSP - CRISPR"},
+          {"s": "NYSE:TMO", "d": "TMO - Thermofisher Scientific"},
+          {"s": "NASDAQ:REGN", "d": "REGN - Regeneron Pharmaceuticals"}
         ]
       },
       {
-        "name": "Penny Stocks",
+        "title": "Penny Stocks",
         "symbols": [
-          { "name": "NASDAQ:MVST", "displayName": "MVST - Microvast Holdings Inc" },
-          { "name": "NASDAQ:VUZI", "displayName": "VUZI - Vuzix Corp" },
-          { "name": "NASDAQ:RCAT", "displayName": "RCAT - Red Cat Holdings" },
-          { "name": "NASDAQ:ASTS", "displayName": "ASTS - AST SpaceMobile Inc" },
-          { "name": "NASDAQ:RR", "displayName": "RR - Richtech Robotics Inc" },
-          { "name": "NASDAQ:VRAR", "displayName": "VRAR - Glimpse Group" },
-          { "name": "NYSE:VRT", "displayName": "VRT - Vertiv Holdings Inc" },
-          { "name": "OTC:BLGO", "displayName": "BLGO - BioLargo Inc" },
-          { "name": "OTC:HYSR", "displayName": "HYSR - SunHydrogen Inc" },
-          { "name": "NASDAQ:SRPT", "displayName": "SRPT - Sarepta Therapeutics Inc" },
-          { "name": "AMEX:KULR", "displayName": "KULR - KULR Technology Group" },
-          { "name": "NASDAQ:ATOS", "displayName": "ATOS - Atossa Therapeutics Inc" }
+          {"s": "NASDAQ:MVST", "d": "MVST - Microvast Holdings Inc"},
+          {"s": "NASDAQ:VUZI", "d": "VUZI - Vuzix Corp"},
+          {"s": "NASDAQ:RCAT", "d": "RCAT - Red Cat Holdings"},
+          {"s": "NASDAQ:ASTS", "d": "ASTS - AST SpaceMobile Inc"},
+          {"s": "NASDAQ:RR", "d": "RR - Richtech Robotics Inc"},
+          {"s": "NASDAQ:VRAR", "d": "VRAR - Glimpse Group"},
+          {"s": "NYSE:VRT", "d": "VRT - Vertiv Holdings Inc"},
+          {"s": "OTC:BLGO", "d": "BLGO - Biolargo Inc"},
+          {"s": "OTC:HYSR", "d": "HYSR - SunHydrogen Inc"},
+          {"s": "NASDAQ:SRPT", "d": "SRPT - Sarepta Therapeutics Inc"},
+          {"s": "AMEX:KULR", "d": "KULR - KULR Technology Group"},
+          {"s": "NASDAQ:ATOS", "d": "ATOS - Atossa Therapeutics Inc"}
         ]
       },
       {
-        "name": "Defense ETFs",
+        "title": "Defense ETFs",
         "symbols": [
-          { "name": "AMEX:PPA", "displayName": "PPA - Invesco Aerospace & Defense ETF" },
-          { "name": "AMEX:SHLD", "displayName": "SHLD - Global X Defense Tech ETF" },
-          { "name": "NASDAQ:NATO", "displayName": "NATO - Transatlantic Defense ETF" },
-          { "name": "CBOE:ITA", "displayName": "ITA - iShares US Aerospace & Defense ETF" },
-          { "name": "AMEX:XAR", "displayName": "XAR - SPDR S&P Aerospace & Defense ETF" },
-          { "name": "CBOE:EUAD", "displayName": "EUAD - STOXX Europe Aerospace & Defense ETF" },
-          { "name": "CBOE:ARKX", "displayName": "ARKX - ARK Space Exploration ETF" },
-          { "name": "SIX:DEFN", "displayName": "DEFN - Direxion Daily Aerospace & Defense Bull 3X Shares" },
-          { "name": "AMEX:WAR", "displayName": "WAR - US Global Technology Aerospace & Defense ETF" }
+          {"s": "AMEX:PPA", "d": "PPA - Invesco Aerospace & Defense EFT"},
+          {"s": "AMEX:SHLD", "d": "SHLD - Global X Defense Tech ETF"},
+          {"s": "NASDAQ:NATO", "d": "NATO - Transatlantic Defense ETF"},
+          {"s": "CBOE:ITA", "d": "ITA - iShared US Aerospace & Defense ETF"},
+          {"s": "AMEX:XAR", "d": "XAR - SPDR S&P Aerospace & Defense ETF"},
+          {"s": "CBOE:EUAD", "d": "STOXX Europe Aerospace & Defense ETF"},
+          {"s": "CBOE:ARKX", "d": "ARKX - ARK Space Exploration ETF"},
+          {"s": "SIX:DEFN", "d": "DEFN - Direxion Daily Aerospace & Defense Bull 3X Shares"},
+          {"s": "AMEX:WAR", "d": "US Global Technology Aerospace & Defense ETF"}
         ]
       },
       {
-        "name": "Tech ETFs",
+        "title": "Tech ETFs",
         "symbols": [
-          { "name": "AMEX:BAI", "displayName": "BAI - Blackrock iShares AI ETF" },
-          { "name": "NASDAQ:SMH", "displayName": "SMH - VanEck Semiconductor ETF" },
-          { "name": "AMEX:VGT", "displayName": "VGT - Vanguard Information Tech ETF" },
-          { "name": "AMEX:CHAT", "displayName": "CHAT - Roundhill Generative AI & Tech ETF" },
-          { "name": "AMEX:ARTY", "displayName": "ARTY - iShares Future AI & Tech ETF" },
-          { "name": "NASDAQ:AIQ", "displayName": "AIQ - Global X AI & Tech ETF" }
+          {"s": "AMEX:BAI", "d": "BAI - Blackrock iShares AI ETF"},
+          {"s": "NASDAQ:SMH", "d": "SMH - Vaneck Semiconductor ETF"},
+          {"s": "AMEX:VGT", "d": "VGT - Vanguard Information Tech ETF"},
+          {"s": "AMEX:CHAT", "d": "CHAT - Roundhill Generative AI & Tech ETF"},
+          {"s": "AMEX:ARTY", "d": "ARTY - iShares Future AI & Tech ETF"},
+          {"s": "NASDAQ:AIQ", "d": "AIQ - Global X AI & Tech ETF"}
         ]
       }
-    ],
-    "showSymbolLogo": true,
-    "isTransparent": false,
-    "colorTheme": "dark",
-    "locale": "en",
-    "backgroundColor": "#131722"
+    ]
   }
   </script>
 </div>
 <!-- TradingView Widget END -->
+
+</body>
+</html>
