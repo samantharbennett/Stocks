@@ -1,141 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Stock Buy Decision Helper</title>
-<style>
-  body {
-    background-color: #1e1e1e;
-    color: #eee;
-    font-family: Arial, sans-serif;
-    max-width: 350px;
-    margin: 20px auto;
-    padding: 10px;
-  }
-  input, button {
-    padding: 10px;
-    margin: 5px 0;
-    width: 100%;
-    border-radius: 5px;
-    border: none;
-    font-size: 16px;
-  }
-  button {
-    background-color: #e91e63;
-    color: white;
-    cursor: pointer;
-  }
-  button:hover {
-    background-color: #ad1457;
-  }
-  .result {
-    margin-top: 20px;
-    background-color: #2c2c2c;
-    padding: 15px;
-    border-radius: 8px;
-  }
-  .metric {
-    margin-bottom: 10px;
-  }
-  .metric strong {
-    display: block;
-    font-size: 14px;
-    color: #e91e63;
-  }
-  .verdict {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: bold;
-  }
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Stock Metrics Comparison</title>
+  <style>
+    body {
+      background: #1e1e1e;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: none;
+    }
+    button {
+      background: #e91e63;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      background: #333;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Stock Buy Decision Helper</h2>
+<h2>Compare Stock Metrics</h2>
 
-<input id="stockSymbol" type="text" placeholder="Enter Stock Symbol (e.g. AAPL)" />
-<button id="fetchBtn">Check Stock</button>
+<input id="symbolInput" placeholder="Enter symbol (e.g. AAPL)" />
+<button id="fetchBtn">Fetch Data</button>
 
-<div id="output" class="result" style="display:none;"></div>
+<table id="resultsTable" style="display:none;">
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Finnhub</th>
+      <th>Alpha Vantage</th>
+      <th>Twelve Data</th>
+    </tr>
+  </thead>
+  <tbody id="resultsBody"></tbody>
+</table>
 
 <script>
-  const apiKey = "d151vgpr01qntv1fni6gd151vgpr01qntv1fni70";
+  const FINNHUB_KEY = 'd151vgpr01qntv1fni6gd151vgpr01qntv1fni70';
+  const ALPHA_KEY = '6SLAGSIEM2SXPAU7';
+  const TWELVE_KEY = '7f4f3e58e9ba42afb0d4e004742a5e7f';
 
-  document.getElementById("fetchBtn").addEventListener("click", async () => {
-    const symbol = document.getElementById("stockSymbol").value.trim().toUpperCase();
-    if (!symbol) {
-      alert("Please enter a stock symbol.");
-      return;
-    }
-    document.getElementById("output").style.display = "none";
-    document.getElementById("output").innerHTML = "Loading...";
+  const metricsList = [
+    { key: 'price', label: 'Price' },
+    { key: 'pe', label: 'P/E Ratio' },
+    { key: 'epsGrowth', label: 'EPS Growth (Past)' },
+    { key: 'epsForward', label: 'EPS Growth (Future)' },
+    { key: 'divYield', label: 'Dividend Yield' },
+    { key: 'deRatio', label: 'Debt / Equity' }
+  ];
+
+  document.getElementById('fetchBtn').onclick = async () => {
+    const symbol = document.getElementById('symbolInput').value.trim().toUpperCase();
+    if (!symbol) return alert('Please enter a stock symbol.');
+
+    document.getElementById('resultsBody').innerHTML = '';
+    document.getElementById('resultsTable').style.display = 'none';
 
     try {
-      // Fetch quote data (price)
-      const quoteRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`);
-      const quote = await quoteRes.json();
+      // Fetch data from Finnhub
+      const [fRes, qRes] = await Promise.all([
+        fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINNHUB_KEY}`).then(r => r.json()).catch(() => ({})),
+        fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`).then(r => r.json()).catch(() => ({}))
+      ]);
+      const fm = fRes.metric || {};
 
-      // Fetch metric data (PE, growth, dividend, debt/equity, future EPS)
-      const metricRes = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`);
-      const metricData = await metricRes.json();
+      // Fetch data from Alpha Vantage
+      const aRes = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_KEY}`)
+        .then(r => r.json()).catch(() => ({}));
+      const aq = aRes['Global Quote'] || {};
 
-      if (quote.c === 0 || !metricData.metric) {
-        document.getElementById("output").innerHTML = "No data found for this symbol.";
-        return;
-      }
+      // Fetch data from Twelve Data
+      const tRes = await fetch(`https://api.twelvedata.com/price?symbol=${symbol}&apikey=${TWELVE_KEY}`)
+        .then(r => r.json()).catch(() => ({}));
 
-      const metrics = metricData.metric;
+      const dataMap = {
+        finn: {
+          price: qRes.c ?? null,
+          pe: fm.peNormalizedAnnual ?? fm.peAnnual ?? null,
+          epsGrowth: fm.epsGrowth ?? null,
+          epsForward: fm.epsForward ?? null,
+          divYield: fm.dividendYieldIndicatedAnnual ?? null,
+          deRatio: fm.debtToEquityAnnual ?? null
+        },
+        alpha: {
+          price: parseFloat(aq['05. price']) || null,
+          pe: null,
+          epsGrowth: null,
+          epsForward: null,
+          divYield: null,
+          deRatio: null
+        },
+        twelve: {
+          price: parseFloat(tRes.price) || null,
+          pe: null,
+          epsGrowth: null,
+          epsForward: null,
+          divYield: null,
+          deRatio: null
+        }
+      };
 
-      // Format functions
-      const fmtNum = (n) => n ? n.toLocaleString(undefined, {maximumFractionDigits:2}) : "N/A";
-      const fmtPct = (n) => n ? (n*100).toFixed(2) + "%" : "N/A";
+      const tbody = document.getElementById('resultsBody');
 
-      // Extract needed data
-      const price = quote.c;
-      const peRatio = metrics.peNormalizedAnnual ?? metrics.peAnnual ?? null;
-      const epsGrowth = metrics.epsGrowth ?? null; // Past EPS Growth
-      const epsForward = metrics.epsForward ?? null; // Future EPS estimate (as "expected future growth")
-      const dividendYield = metrics.dividendYieldIndicatedAnnual ?? null;
-      const debtEquity = metrics.debtToEquityAnnual ?? null;
+      metricsList.forEach(m => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${m.label}</td>
+          <td>${format(dataMap.finn[m.key])}</td>
+          <td>${format(dataMap.alpha[m.key])}</td>
+          <td>${format(dataMap.twelve[m.key])}</td>
+        `;
+        tbody.appendChild(row);
+      });
 
-      // Build verdict based on simple heuristics
-      let verdict = "";
-      let score = 0;
-
-      if (peRatio && peRatio < 20) score++;
-      if (epsGrowth && epsGrowth > 0) score++;
-      if (epsForward && epsForward > 0) score++;
-      if (dividendYield && dividendYield > 0.02) score++;
-      if (debtEquity && debtEquity < 1) score++;
-
-      if (score >= 4) verdict = "Good candidate for buying 👍";
-      else if (score >= 2) verdict = "Maybe worth buying, do more research 🤔";
-      else verdict = "Consider waiting or researching more ⚠️";
-
-      // Render output
-      document.getElementById("output").style.display = "block";
-      document.getElementById("output").innerHTML = `
-        <div class="metric"><strong>Current Price:</strong> $${fmtNum(price)}</div>
-        <div class="metric"><strong>PE Ratio:</strong> ${fmtNum(peRatio)}</div>
-        <div class="metric"><strong>EPS Growth (Past):</strong> ${fmtPct(epsGrowth)}</div>
-        <div class="metric"><strong>EPS Growth Estimate (Future):</strong> ${fmtNum(epsForward)}</div>
-        <div class="metric"><strong>Dividend Yield:</strong> ${fmtPct(dividendYield)}</div>
-        <div class="metric"><strong>Debt to Equity Ratio:</strong> ${fmtNum(debtEquity)}</div>
-        <div class="verdict">${verdict}</div>
-      `;
+      document.getElementById('resultsTable').style.display = 'table';
 
     } catch (error) {
-      document.getElementById("output").style.display = "block";
-      document.getElementById("output").innerHTML = "Error fetching stock data.";
+      alert("Error fetching data: " + error);
       console.error(error);
     }
-  });
+  };
+
+  function format(v) {
+    if (v === null || v === undefined) return '-';
+    if (typeof v === 'number' && v < 1 && v >= 0) return (v * 100).toFixed(2) + '%';
+    return typeof v === 'number' ? v.toFixed(2) : v.toString();
+  }
 </script>
-
-</body>
-</html>
-
 
 </body>
 </html>
