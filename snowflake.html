@@ -12,22 +12,22 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: 10px;
     }
     #symbolInput, #updateButton {
-      padding: 8px;
-      margin: 10px;
+      padding: 6px;
+      margin: 8px;
       border-radius: 4px;
       border: none;
+      width: 300px;
     }
     #updateButton {
       background-color: #00bcd4;
       color: white;
       cursor: pointer;
     }
-    canvas {
-      width: 340px !important;
-      height: 340px !important;
+    #snowflakeContainer {
+      width: 340px;
     }
   </style>
 </head>
@@ -36,7 +36,9 @@
 <h2>Stock Snowflake Model</h2>
 <input type="text" id="symbolInput" value="LMT" placeholder="Enter Stock Symbol (e.g. AAPL)">
 <button id="updateButton">Update</button>
-<canvas id="snowflakeChart"></canvas>
+<div id="snowflakeContainer">
+  <canvas id="snowflakeChart" width="340" height="340"></canvas>
+</div>
 
 <script>
   const apiKey = "d151vgpr01qntv1fni6gd151vgpr01qntv1fni70";
@@ -58,22 +60,27 @@
 
     if (!metrics) return;
 
-    // Normalize some example values for demonstration
     const dataPoints = [
-      normalize(metrics.peNormalizedAnnual, 5, 50),
-      normalize(metrics.pbAnnual, 0.5, 10),
-      normalize(metrics.roaAnnual, 0, 0.2),
-      normalize(metrics.roeAnnual, 0, 0.3),
-      normalize(metrics.currentRatioAnnual, 0.5, 5)
+      normalize(metrics.peNormalizedAnnual, 5, 50), // Value
+      normalize(metrics.epsGrowth5Y, -0.2, 0.3),   // Future Growth
+      normalize(metrics.priceReturn1Y, -0.5, 0.5), // Past Performance
+      normalize(metrics.debtEquityAnnual, 0, 3),   // Financial Health
+      normalize(metrics.dividendYieldIndicatedAnnual, 0, 0.08) // Dividend
     ];
 
     const data = {
-      labels: ["P/E Ratio", "P/B Ratio", "ROA", "ROE", "Current Ratio"],
+      labels: [
+        "Value\nPrice-to-earnings (PE) ratio",
+        "Future Growth\nEPS growth estimates",
+        "Past Performance\n1 Year price return",
+        "Financial Health\nDebt to equity ratio",
+        "Dividend\nIndicated dividend yield"
+      ],
       datasets: [{
         label: `${symbol} Metrics`,
         data: dataPoints,
-        backgroundColor: 'rgba(255, 105, 180, 0.2)', // Pink shade
-        borderColor: '#ff69b4', // Pink border
+        backgroundColor: 'rgba(255, 105, 180, 0.3)',
+        borderColor: 'pink',
         borderWidth: 2
       }]
     };
@@ -90,7 +97,7 @@
           r: {
             angleLines: { color: '#555' },
             grid: { color: '#444' },
-            pointLabels: { color: 'white' }
+            pointLabels: { color: 'white', font: { size: 10 } }
           }
         }
       }
@@ -105,6 +112,10 @@
   document.getElementById("updateButton").addEventListener("click", updateSnowflake);
   updateSnowflake();
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
