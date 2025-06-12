@@ -3,38 +3,30 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Stock Metrics Comparison</title>
+  <title>Extended Stock Metrics Comparison</title>
   <style>
     body {
       background: #1e1e1e;
       color: #eee;
       font-family: Arial, sans-serif;
-      max-width: 500px;
+      max-width: 600px;
       margin: 20px auto;
       padding: 20px;
     }
     input, button {
       width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      font-size: 1rem;
-      border-radius: 4px;
-      border: none;
+      padding: 10px; margin: 5px 0;
+      font-size: 1rem; border-radius: 4px; border: none;
     }
     button {
       background: #e91e63;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
+      color: white; cursor: pointer; font-weight: bold;
     }
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+      width: 100%; border-collapse: collapse; margin-top: 20px;
     }
     th, td {
-      padding: 8px;
-      text-align: center;
+      padding: 8px; text-align: center;
       border-bottom: 1px solid #444;
     }
     th {
@@ -44,7 +36,7 @@
 </head>
 <body>
 
-<h2>Compare Stock Metrics</h2>
+<h2>Extended Stock Metrics Comparison</h2>
 
 <input id="symbolInput" placeholder="Enter symbol (e.g. AAPL)" />
 <button id="fetchBtn">Fetch Data</button>
@@ -55,7 +47,7 @@
       <th>Metric</th>
       <th>Finnhub</th>
       <th>Alpha Vantage</th>
-      <th>Twelve Data</th>
+      <th>Twelve Data</th>
     </tr>
   </thead>
   <tbody id="resultsBody"></tbody>
@@ -68,11 +60,16 @@
 
   const metricsList = [
     { key: 'price', label: 'Price' },
+    { key: 'changePct', label: 'Change %' },
     { key: 'pe', label: 'P/E Ratio' },
     { key: 'epsGrowth', label: 'EPS Growth (Past)' },
     { key: 'epsForward', label: 'EPS Growth (Future)' },
     { key: 'divYield', label: 'Dividend Yield' },
-    { key: 'deRatio', label: 'Debt / Equity' }
+    { key: 'deRatio', label: 'Debt / Equity' },
+    { key: 'marketCap', label: 'Market Cap' },
+    { key: 'beta', label: 'Beta (Volatility)' },
+    { key: 'low52', label: '52‑Week Low %' },
+    { key: 'high52', label: '52‑Week High %' }
   ];
 
   document.getElementById('fetchBtn').onclick = async () => {
@@ -83,76 +80,93 @@
     document.getElementById('resultsTable').style.display = 'none';
 
     try {
-      // Fetch data from Finnhub
-      const [fRes, qRes] = await Promise.all([
-        fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINNHUB_KEY}`).then(r => r.json()).catch(() => ({})),
-        fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`).then(r => r.json()).catch(() => ({}))
+      // Fetch datasets
+      const [f, fq, aRes, tQuote] = await Promise.all([
+        fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINNHUB_KEY}`)
+          .then(r => r.json()).catch(() => ({})),
+        fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`)
+          .then(r => r.json()).catch(() => ({})),
+        fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_KEY}`)
+          .then(r => r.json()).catch(() => ({})),
+        fetch(`https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${TWELVE_KEY}`)
+          .then(r => r.json()).catch(() => ({}))
       ]);
-      const fm = fRes.metric || {};
 
-      // Fetch data from Alpha Vantage
-      const aRes = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_KEY}`)
-        .then(r => r.json()).catch(() => ({}));
+      const fm = f.metric || {};
       const aq = aRes['Global Quote'] || {};
+      const tq = tQuote || {};
 
-      // Fetch data from Twelve Data
-      const tRes = await fetch(`https://api.twelvedata.com/price?symbol=${symbol}&apikey=${TWELVE_KEY}`)
-        .then(r => r.json()).catch(() => ({}));
-
+      // Build mapped data
       const dataMap = {
         finn: {
-          price: qRes.c ?? null,
+          price: fq.c ?? null,
+          changePct: fq.dp ?? null,
           pe: fm.peNormalizedAnnual ?? fm.peAnnual ?? null,
           epsGrowth: fm.epsGrowth ?? null,
           epsForward: fm.epsForward ?? null,
           divYield: fm.dividendYieldIndicatedAnnual ?? null,
-          deRatio: fm.debtToEquityAnnual ?? null
+          deRatio: fm.debtToEquityAnnual ?? null,
+          marketCap: fm.marketCapitalization ?? null,
+          beta: fm.beta ?? null,
+          low52: null, high52: null
         },
         alpha: {
           price: parseFloat(aq['05. price']) || null,
-          pe: null,
-          epsGrowth: null,
-          epsForward: null,
-          divYield: null,
-          deRatio: null
+          changePct: parseFloat(aq['10. change percent']) || null,
+          pe: null, epsGrowth: null, epsForward: null,
+          divYield: null, deRatio: null, marketCap: null, beta: null,
+          low52: null, high52: null
         },
         twelve: {
-          price: parseFloat(tRes.price) || null,
-          pe: null,
-          epsGrowth: null,
-          epsForward: null,
-          divYield: null,
-          deRatio: null
+          price: parseFloat(tq.price) || null,
+          changePct: parseFloat(tq.percent_change) || null,
+          pe: null, epsGrowth: null, epsForward: null, divYield: null,
+          deRatio: null, marketCap: parseFloat(tq.market_cap) || null,
+          beta: null, low52: null, high52: null
         }
       };
 
-      const tbody = document.getElementById('resultsBody');
+      // Calculate 52-week % relative to price if possible
+      if (aq['05. price'] && aq['03. high'] && aq['04. low']) {
+        const pr = parseFloat(aq['05. price']);
+        dataMap.alpha.high52 = ((parseFloat(aq['03. high']) - pr) / pr) * 100;
+        dataMap.alpha.low52  = ((pr - parseFloat(aq['04. low'])) / pr) * 100;
+      }
 
+      // Render the table
+      const tbody = document.getElementById('resultsBody');
       metricsList.forEach(m => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${m.label}</td>
-          <td>${format(dataMap.finn[m.key])}</td>
-          <td>${format(dataMap.alpha[m.key])}</td>
-          <td>${format(dataMap.twelve[m.key])}</td>
+          <td>${format(dataMap.finn[m.key], m.key)}</td>
+          <td>${format(dataMap.alpha[m.key], m.key)}</td>
+          <td>${format(dataMap.twelve[m.key], m.key)}</td>
         `;
         tbody.appendChild(row);
       });
 
       document.getElementById('resultsTable').style.display = 'table';
 
-    } catch (error) {
-      alert("Error fetching data: " + error);
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      alert("Error fetching data. Check console for details.");
     }
   };
 
-  function format(v) {
-    if (v === null || v === undefined) return '-';
-    if (typeof v === 'number' && v < 1 && v >= 0) return (v * 100).toFixed(2) + '%';
-    return typeof v === 'number' ? v.toFixed(2) : v.toString();
+  function format(val, key) {
+    if (val === null || val === undefined) return '-';
+    if (key === 'marketCap') return (val / 1e9).toFixed(2) + 'B';
+    if (['changePct','low52','high52'].includes(key)) return val.toFixed(2) + '%';
+    if (['price', 'pe', 'beta', 'deRatio'].includes(key)) return val.toFixed(2);
+    if (['epsGrowth', 'epsForward', 'divYield'].includes(key)) return (val * 100).toFixed(2) + '%';
+    return val.toString();
   }
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
