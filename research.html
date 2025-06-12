@@ -2,228 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Stock Buy Decision Helper</title>
+  <title>Stock Research Decision Tool</title>
   <style>
     body {
-      background-color: #1e1e1e;
-      color: white;
       font-family: Arial, sans-serif;
-      max-width: 350px;
+      max-width: 450px;
       margin: 20px auto;
-      padding: 10px;
+      background: #121212;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
     }
     input, button {
-      padding: 8px;
-      margin: 5px 0;
+      padding: 10px;
+      font-size: 1rem;
       border-radius: 4px;
       border: none;
-      width: 100%;
-      box-sizing: border-box;
+      margin-right: 5px;
+    }
+    input {
+      width: 70%;
+      background: #222;
+      color: white;
     }
     button {
-      background-color: #e91e63;
+      background: #e91e63;
       color: white;
       cursor: pointer;
-    }
-    .metric {
-      margin: 10px 0;
-    }
-    .metric b {
-      display: block;
-      font-size: 1.1em;
-      margin-bottom: 2px;
-    }
-    .metric small {
-      color: #bbb;
-      font-size: 0.85em;
+      font-weight: bold;
     }
     #output {
       margin-top: 20px;
-      padding: 10px;
-      background: #2c2c2c;
-      border-radius: 6px;
-      min-height: 100px;
-      white-space: pre-line;
+      white-space: pre-wrap;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
 
-<h2>Stock Buy Decision Helper</h2>
-<input type="text" id="symbolInput" placeholder="Enter stock symbol (e.g. LMT)" />
-<button id="fetchButton">Get Stock Data</button>
+<h2>Stock Research Decision Tool</h2>
+<input type="text" id="symbol" placeholder="Enter Stock Symbol (e.g. AAPL)" value="AAPL" />
+<button id="checkBtn">Check Stock</button>
 
-<div id="output">Enter a symbol and click "Get Stock Data".</div>
+<pre id="output">Enter a symbol and click "Check Stock"</pre>
 
 <script>
   const apiKey = "d151vgpr01qntv1fni6gd151vgpr01qntv1fni70";
-  const output = document.getElementById("output");
 
-  function toUnix(date) {
-    return Math.floor(date.getTime() / 1000);
+  // Helper to format change percentages or fallback
+  function formatChange(val) {
+    return val === null || val === undefined || isNaN(val) ? "N/A" : val.toFixed(2) + "%";
+  }
+
+  function upDown(change) {
+    if (change === null || isNaN(change)) return "N/A";
+    return change >= 0 ? "Up" : "Down";
+  }
+
+  // Calculate percentage change between two prices
+  function calcChange(newPrice, oldPrice) {
+    if (!newPrice || !oldPrice || oldPrice === 0) return null;
+    return ((newPrice - oldPrice) / oldPrice) * 100;
+  }
+
+  async function fetchWeeklyCandles(symbol, weeks) {
+    const to = Math.floor(Date.now() / 1000);
+    const from = to - weeks * 7 * 24 * 60 * 60; // weeks ago in seconds
+
+    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=W&from=${from}&to=${to}&token=${apiKey}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.s !== 'ok') {
+        return null;
+      }
+      return data;
+    } catch {
+      return null;
+    }
   }
 
   async function fetchMetrics(symbol) {
     try {
       const res = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`);
       const data = await res.json();
-      if (data.metric) return data.metric;
-      else return null;
+      return data.metric || null;
     } catch {
       return null;
     }
   }
 
-  async function fetchCandles(symbol, from, to) {
-    try {
-      const res = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${apiKey}`);
-      const data = await res.json();
-      if (data.s === "ok" && data.c && data.c.length > 0) return data;
-      return null;
-    } catch {
-      return null;
-    }
-  }
+  document.getElementById('checkBtn').addEventListener('click', async () => {
+    const symbol = document.getElementById('symbol').value.trim().toUpperCase();
+    const output = document.getElementById('output');
+    output.textContent = "Loading data for " + symbol + "...";
 
-  function percentChange(oldPrice, newPrice) {
-    if (oldPrice === 0 || oldPrice === null || oldPrice === undefined || newPrice === null || newPrice === undefined) return null;
-    return ((newPrice - oldPrice) / oldPrice) * 100;
-  }
+    const [metrics, candles] = await Promise.all([
+      fetchMetrics(symbol),
+      fetchWeeklyCandles(symbol, 52) // 1 year weekly candles
+    ]);
 
-  function upDown(percent) {
-    if (percent === null) return "N/A";
-    return percent >= 0 ? "Up" : "Down";
-  }
+    // Initialize changes as null
+    let oneDayChange = null; // N/A with weekly data
+    let oneMonthChange = null;
+    let sixMonthChange = null;
+    let oneYearChange = null;
+    let weekChange = null;
+    let twoWeekChange = null;
+    let monthChange = null;
 
-  function formatPercent(value) {
-    if (value === null) return "N/A";
-    return value.toFixed(2) + "%";
-  }
+    if (candles && candles.c && candles.c.length > 1) {
+      const close = candles.c;
+      const len = close.length;
 
-  function formatNumber(value, decimals=2) {
-    if (value === null || value === undefined || isNaN(value)) return "N/A";
-    return value.toFixed(decimals);
-  }
-
-  // Find closing price on or after given date
-  function getClosePriceOnOrAfter(candles, date) {
-    if (!candles) return null;
-    const target = toUnix(date);
-    for (let i = 0; i < candles.t.length; i++) {
-      if (candles.t[i] >= target) return candles.c[i];
-    }
-    // If none found, return first price if available
-    return candles.c.length > 0 ? candles.c[0] : null;
-  }
-
-  async function update() {
-    const symbol = document.getElementById("symbolInput").value.trim().toUpperCase();
-    if (!symbol) {
-      output.textContent = "Please enter a stock symbol.";
-      return;
+      // Calculate momentum changes
+      weekChange = len > 1 ? calcChange(close[len-1], close[len-2]) : null;
+      twoWeekChange = len > 2 ? calcChange(close[len-1], close[len-3]) : null;
+      oneMonthChange = len > 4 ? calcChange(close[len-1], close[len-5]) : null;
+      sixMonthChange = len > 25 ? calcChange(close[len-1], close[len-26]) : null;
+      oneYearChange = len > 51 ? calcChange(close[len-1], close[len-52]) : null;
+      monthChange = oneMonthChange; // alias
     }
 
-    output.textContent = `Loading data for ${symbol}...`;
-
-    const now = new Date();
-    const todayUnix = toUnix(now);
-
-    // Dates for historical data
-    const oneYearAgo = new Date(now);
-    oneYearAgo.setDate(now.getDate() - 370);
-
-    const sixMonthsAgo = new Date(now);
-    sixMonthsAgo.setDate(now.getDate() - 190);
-
-    const oneMonthAgo = new Date(now);
-    oneMonthAgo.setDate(now.getDate() - 30);
-
-    const twoWeeksAgo = new Date(now);
-    twoWeeksAgo.setDate(now.getDate() - 14);
-
-    const oneWeekAgo = new Date(now);
-    oneWeekAgo.setDate(now.getDate() - 7);
-
-    // Fetch fundamentals
-    const metrics = await fetchMetrics(symbol);
-
-    // Fetch 1 year candles
-    let candles = await fetchCandles(symbol, toUnix(oneYearAgo), todayUnix);
-
-    if (!candles) {
-      // fallback to 6 months
-      candles = await fetchCandles(symbol, toUnix(sixMonthsAgo), todayUnix);
-    }
-
-    // Extract prices or set null if no data
-    const priceToday = candles && candles.c.length ? candles.c[candles.c.length - 1] : null;
-    const price1YearAgo = getClosePriceOnOrAfter(candles, oneYearAgo);
-    const price6MonthsAgo = getClosePriceOnOrAfter(candles, sixMonthsAgo);
-    const price1MonthAgo = getClosePriceOnOrAfter(candles, oneMonthAgo);
-    const price2WeeksAgo = getClosePriceOnOrAfter(candles, twoWeeksAgo);
-    const price1WeekAgo = getClosePriceOnOrAfter(candles, oneWeekAgo);
-
-    // Calculate % changes or null if not possible
-    const change1Day = (candles && candles.c.length > 1) ? percentChange(candles.c[candles.c.length - 2], priceToday) : null;
-    const change1Month = percentChange(price1MonthAgo, priceToday);
-    const change6Months = percentChange(price6MonthsAgo, priceToday);
-    const change1Year = percentChange(price1YearAgo, priceToday);
-
-    const weeklyChange = percentChange(price1WeekAgo, priceToday);
-    const twoWeekChange = percentChange(price2WeeksAgo, priceToday);
-    const monthlyChange = change1Month;
-
-    // Fundamental metrics or null if missing
-    const pe = metrics && metrics.peNormalizedAnnual ? metrics.peNormalizedAnnual : (metrics && metrics.peAnnual ? metrics.peAnnual : null);
-    const debtEquity = metrics && metrics.debtToEquityAnnual ? metrics.debtToEquityAnnual : null;
+    // Fundamentals with fallback
+    const peRatio = metrics && metrics.peNormalizedAnnual ? metrics.peNormalizedAnnual : null;
+    const debtEquity = metrics && metrics.debtEquityAnnual ? metrics.debtEquityAnnual : null;
     const epsGrowth = metrics && metrics.epsGrowth ? metrics.epsGrowth : null;
     const dividendYield = metrics && metrics.dividendYieldAnnual ? metrics.dividendYieldAnnual : null;
 
-    // Buy decision logic with N/A fallback
-    let buyScore = 0;
-    let enoughDataForDecision = true;
-
-    if (pe === null || debtEquity === null || epsGrowth === null || dividendYield === null ||
-        monthlyChange === null || weeklyChange === null || twoWeekChange === null) {
-      enoughDataForDecision = false;
-    } else {
-      if (pe > 0 && pe < 30) buyScore++;
-      if (debtEquity > 0 && debtEquity < 1) buyScore++;
-      if (epsGrowth > 0) buyScore++;
-      if (dividendYield > 0) buyScore++;
-      if (monthlyChange > 0) buyScore++;
-      if (weeklyChange > 0) buyScore++;
-      if (twoWeekChange > 0) buyScore++;
+    // Decision logic: simple heuristic
+    let recommendation = "N/A";
+    if (
+      peRatio !== null && peRatio < 20 &&
+      epsGrowth !== null && epsGrowth > 0 &&
+      oneYearChange !== null && oneYearChange > 0 &&
+      debtEquity !== null && debtEquity < 1 &&
+      dividendYield !== null && dividendYield > 0.02 &&
+      weekChange !== null && weekChange > 0 &&
+      monthChange !== null && monthChange > 0
+    ) {
+      recommendation = "Consider Buying";
+    } else if (
+      peRatio !== null && peRatio > 30 &&
+      oneYearChange !== null && oneYearChange < 0 &&
+      debtEquity !== null && debtEquity > 2
+    ) {
+      recommendation = "Consider Selling or Avoid";
     }
 
-    const buyRecommendation = enoughDataForDecision && buyScore >= 5 ? "BUY" : (enoughDataForDecision ? "HOLD/SELL" : "N/A");
+    output.textContent =
+`Price Changes
 
-    output.innerHTML = `
-      <div class="metric"><b>Price Changes</b>
-        <small>1 Day: ${formatPercent(change1Day)} (${upDown(change1Day)})</small><br/>
-        <small>1 Month: ${formatPercent(change1Month)} (${upDown(change1Month)})</small><br/>
-        <small>6 Months: ${formatPercent(change6Months)} (${upDown(change6Months)})</small><br/>
-        <small>1 Year: ${formatPercent(change1Year)} (${upDown(change1Year)})</small>
-      </div>
+1 Day: N/A (weekly data)
 
-      <div class="metric"><b>Momentum</b>
-        <small>This Week: ${upDown(weeklyChange)}</small><br/>
-        <small>Last 2 Weeks: ${upDown(twoWeekChange)}</small><br/>
-        <small>This Month: ${upDown(monthlyChange)}</small>
-      </div>
+1 Month: ${formatChange(oneMonthChange)} (${upDown(oneMonthChange)})
+6 Months: ${formatChange(sixMonthChange)} (${upDown(sixMonthChange)})
+1 Year: ${formatChange(oneYearChange)} (${upDown(oneYearChange)})
 
-      <div class="metric"><b>Fundamentals</b>
-        <small>P/E Ratio: ${formatNumber(pe)}</small><br/>
-        <small>Debt to Equity: ${formatNumber(debtEquity)}</small><br/>
-        <small>EPS Growth: ${formatNumber(epsGrowth)}</small><br/>
-        <small>Dividend Yield: ${formatNumber(dividendYield)}</small>
-      </div>
+Momentum
 
-      <div class="metric"><b>Recommendation:</b> ${buyRecommendation}</div>
-    `;
-  }
+This Week: ${formatChange(weekChange)} (${upDown(weekChange)})
+Last 2 Weeks: ${formatChange(twoWeekChange)} (${upDown(twoWeekChange)})
+This Month: ${formatChange(monthChange)} (${upDown(monthChange)})
 
-  document.getElementById("fetchButton").addEventListener("click", update);
+Fundamentals
+
+P/E Ratio: ${peRatio !== null ? peRatio.toFixed(2) : "N/A"}
+Debt to Equity: ${debtEquity !== null ? debtEquity.toFixed(2) : "N/A"}
+EPS Growth: ${epsGrowth !== null ? (epsGrowth*100).toFixed(2) + "%" : "N/A"}
+Dividend Yield: ${dividendYield !== null ? (dividendYield*100).toFixed(2) + "%" : "N/A"}
+
+Recommendation:
+${recommendation}
+`;
+  });
 </script>
 
 </body>
