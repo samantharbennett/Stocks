@@ -51,8 +51,7 @@
 <body>
 
 <script>
-  const fullSymbol = "NYSE:LMT"; // Used for TradingView widgets
-  const shortSymbol = "LMT";       // Used for Finnhub API
+  const shortSymbol = "LMT"; // Used for Finnhub API
 </script>
 
 <!-- Mini Chart Widget (TradingView) -->
@@ -61,7 +60,7 @@
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
     {
-      "symbol": fullSymbol,
+      "symbol": "NYSE:LMT",
       "width": "350",
       "height": "220",
       "locale": "en",
@@ -78,14 +77,14 @@
   <div class="tradingview-widget-container">
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-profile.js" async>
-      new TradingView.widget({
-        "width": 350,
-        "height": 550,
-        "symbol": fullSymbol,
-        "colorTheme": "dark",
-        "locale": "en",
-        "isTransparent": false,
-      });
+    {
+      "width": 350,
+      "height": 550,
+      "symbol": "NYSE:LMT",
+      "colorTheme": "dark",
+      "locale": "en",
+      "isTransparent": false
+    }
     </script>
   </div>
 </div>
@@ -95,18 +94,17 @@
   <div class="tradingview-widget-container">
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript"  src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-      new TradingView.widget({
-        "interval": "1m",
-        "width": 350,
-        "height": 450,
-        "symbol": fullSymbol,
-        "interval": "1m",
-        "colorTheme": "dark",
-        "locale": "en",
-        "isTransparent": false,
-        "showIntervalTabs": true,
-        "displayMode": "single",
-      });
+    {
+      "interval": "1m",
+      "width": 350,
+      "height": 450,
+      "symbol": "NYSE:LMT",
+      "colorTheme": "dark",
+      "locale": "en",
+      "isTransparent": false,
+      "showIntervalTabs": true,
+      "displayMode": "single"
+    }
     </script>
   </div>
 </div>
@@ -160,16 +158,16 @@
   <div class="tradingview-widget-container">
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
-      new TradingView.widget({
-        "feedMode": "symbol",
-        "width": 350,
-        "height": 550,
-        "symbol": fullSymbol,
-        "colorTheme": "dark",
-        "locale": "en",
-        "isTransparent": false,
-        "displayMode": "regular",
-      });
+    {
+      "feedMode": "symbol",
+      "width": 350,
+      "height": 550,
+      "symbol": "NYSE:LMT",
+      "colorTheme": "dark",
+      "locale": "en",
+      "isTransparent": false,
+      "displayMode": "regular"
+    }
     </script>
   </div>
 </div>
@@ -179,15 +177,15 @@
   <div class="tradingview-widget-container">
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-financials.js" async>
-      new TradingView.widget({
-        "width": 350,
-        "height": 550,
-        "symbol": fullSymbol,
-        "colorTheme": "dark",
-        "locale": "en",
-        "isTransparent": false,
-        "displayMode": "regular",
-      });
+    {
+      "width": 350,
+      "height": 550,
+      "symbol": "NYSE:LMT",
+      "colorTheme": "dark",
+      "locale": "en",
+      "isTransparent": false,
+      "displayMode": "regular"
+    }
     </script>
   </div>
 </div>
